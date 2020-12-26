@@ -13,7 +13,7 @@ contract brrr_token is erc20_interface {
     
     //account balances
     mapping(address => uint256) balances;
-    //amount owner of an account (address 1) has approved for transfer to another account (address 2)
+    //amount owner of an account (address 1) has approved another account (address 2) to spend on their behalf
     mapping(address => mapping(address => uint256)) allowed;
     
     //initialize the token with a name, symbol, totalSupply
@@ -39,26 +39,35 @@ contract brrr_token is erc20_interface {
         return balances[tokenOwner];
     }
     
-    //return amount tokenOwner has allowed spender to spend (transferred to spender)
+    //return amount tokenOwner has allowed spender to spend on their behalf
     function allowance(address tokenOwner, address spender) external view override returns (uint256 remaining) {
         return allowed[tokenOwner][spender];
     }
     
-    //todo - requires SafeMath
+    //transfer tokens from sender to target, emit transfer event
     function transfer(address to, uint256 tokens) external override returns (bool success) {
-            
+        balances[msg.sender] = safe_math.sub(balances[msg.sender], tokens);
+        balances[to] = safe_math.add(balances[to], tokens);
+        emit Transfer(msg.sender, to, tokens);
+        return true;
     }
     
-    //allow spender to spend tokens number of tokens (approve for transfer)
+    //allow spender to spend tokens number of tokens on msg.sender's behalf (approve for transfer)
     function approve(address spender, uint256 tokens) external override returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
     }
     
-    //todo - requires SafeMath
+    //msg.sender transfer from one address to another on the former's behalf
+    //the amount transferred is deducted from the amount msg.sender is allowed to spend on from's behalf
     function transferFrom(address from, address to, uint256 tokens) external override returns (bool success) {
-        
+        balances[from] = safe_math.sub(balances[from], tokens);
+        allowed[from][msg.sender] = safe_math.sub(allowed[from][msg.sender], tokens);
+        balances[to] = safe_math.add(balances[to], tokens);
+        emit Transfer(from, to, tokens);
+        return true;
     }
     
 }
+
