@@ -22,7 +22,7 @@ contract brrr_token is erc20_interface {
         name = "brrr_token";
         symbol = "BRR";
         decimals = 42;
-        total_supply = 42000000000000; //42 trillion tokens
+        total_supply = 42000000000000 * (10 ** 42); //42 trillion tokens
         
         balances[msg.sender] = total_supply;
         emit Transfer(address(0), msg.sender, total_supply);
